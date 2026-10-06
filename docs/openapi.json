@@ -1,0 +1,156 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Rumi Building Service API",
+        "description": "REST API of the Building Management bounded context: buildings, their IoT sensors and resident invitations.",
+        "version": "0.1.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8081",
+            "description": "Generated server url"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Buildings",
+            "description": "Registration and management of monitored buildings"
+        }
+    ],
+    "paths": {
+        "/api/v1/buildings": {
+            "post": {
+                "tags": [
+                    "Buildings"
+                ],
+                "summary": "Register a building",
+                "description": "Registers a new building to be monitored (US04). The service generates the building id and returns the stored building.",
+                "operationId": "registerBuilding",
+                "requestBody": {
+                    "description": "Name and address of the building to register",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BuildingRequest"
+                            },
+                            "examples": {
+                                "Residential tower": {
+                                    "description": "Residential tower",
+                                    "value": {
+                                        "name": "Rumi Tower",
+                                        "address": "Av. Arequipa 1234, Lince, Lima"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Building registered",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BuildingResponse"
+                                },
+                                "examples": {
+                                    "Registered building": {
+                                        "description": "Registered building",
+                                        "value": {
+                                            "id": "3f2c8a10-5d7b-4e9a-b1c2-0a1b2c3d4e5f",
+                                            "name": "Rumi Tower",
+                                            "address": "Av. Arequipa 1234, Lince, Lima"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The request body is missing or is not valid JSON",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "Malformed body": {
+                                        "description": "Malformed body",
+                                        "value": {
+                                            "timestamp": "2026-10-06T15:30:00.000+00:00",
+                                            "status": 400,
+                                            "error": "Bad Request",
+                                            "path": "/api/v1/buildings"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "The name or the address is missing or blank. The domain model rejects it and the error is not yet mapped to a 4xx status.",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "Blank name": {
+                                        "description": "Blank name",
+                                        "value": {
+                                            "timestamp": "2026-10-06T15:30:00.000+00:00",
+                                            "status": 500,
+                                            "error": "Internal Server Error",
+                                            "path": "/api/v1/buildings"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "BuildingRequest": {
+                "type": "object",
+                "description": "Data required to register a building",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the building",
+                        "example": "Rumi Tower"
+                    },
+                    "address": {
+                        "type": "string",
+                        "description": "Street address of the building",
+                        "example": "Av. Arequipa 1234, Lince, Lima"
+                    }
+                },
+                "required": [
+                    "address",
+                    "name"
+                ]
+            },
+            "BuildingResponse": {
+                "type": "object",
+                "description": "A registered building",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier generated by the service",
+                        "example": "3f2c8a10-5d7b-4e9a-b1c2-0a1b2c3d4e5f"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the building",
+                        "example": "Rumi Tower"
+                    },
+                    "address": {
+                        "type": "string",
+                        "description": "Street address of the building",
+                        "example": "Av. Arequipa 1234, Lince, Lima"
+                    }
+                }
+            }
+        }
+    }
+}
