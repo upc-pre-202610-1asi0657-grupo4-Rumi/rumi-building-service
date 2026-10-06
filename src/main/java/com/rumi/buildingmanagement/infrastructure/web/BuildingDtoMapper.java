@@ -1,6 +1,7 @@
 package com.rumi.buildingmanagement.infrastructure.web;
 
 import com.rumi.buildingmanagement.domain.model.Building;
+import com.rumi.buildingmanagement.domain.model.BuildingProfile;
 import com.rumi.buildingmanagement.infrastructure.web.dto.BuildingRequestDto;
 import com.rumi.buildingmanagement.infrastructure.web.dto.BuildingResponseDto;
 import org.springframework.stereotype.Component;
@@ -11,18 +12,27 @@ import java.util.UUID;
 public class BuildingDtoMapper {
 
     public Building toDomain(UUID buildingId, BuildingRequestDto request) {
-        return new Building(
-                buildingId,
+        BuildingProfile profile = new BuildingProfile(
                 request.name(),
-                request.address()
+                request.address(),
+                request.floors(),
+                request.constructionYear(),
+                request.units()
         );
+        return Building.register(buildingId, profile, request.administratorUserId());
     }
 
     public BuildingResponseDto toResponse(Building building) {
+        BuildingProfile profile = building.getProfile();
         return new BuildingResponseDto(
                 building.getId(),
-                building.getName(),
-                building.getAddress()
+                profile.name(),
+                profile.address(),
+                profile.floors(),
+                profile.constructionYear(),
+                profile.units(),
+                building.getStatus(),
+                building.getAdministratorUserId()
         );
     }
 }

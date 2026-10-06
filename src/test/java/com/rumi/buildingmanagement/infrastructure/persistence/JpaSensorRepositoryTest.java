@@ -1,0 +1,78 @@
+package com.rumi.buildingmanagement.infrastructure.persistence;
+
+import com.rumi.buildingmanagement.BuildingFixtures;
+import com.rumi.buildingmanagement.domain.model.Building;
+import com.rumi.buildingmanagement.domain.model.Sensor;
+import com.rumi.buildingmanagement.domain.model.SensorStatus;
+import com.rumi.buildingmanagement.domain.model.SensorType;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.context.annotation.Import;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
+@Import({JpaBuildingRepository.class, JpaSensorRepository.class})
+class JpaSensorRepositoryTest {
+
+    @Autowired
+    private JpaBuildingRepository buildingRepository;
+
+    @Autowired
+    private JpaSensorRepository sensorRepository;
+
+    @Autowired
+    private TestEntityManager entityManager;
+
+    @Test
+    void savesASensorLinkedToItsBuilding() {
+        Building building = buildingRepository.save(BuildingFixtures.pendingBuilding());
+        Sensor sensor = building.registerSensor("FLOOR-3-NORTH", SensorType.ACCELEROMETER);
+
+        Sensor saved = sensorRepository.save(sensor);
+        entityManager.flush();
+        entityManager.clear();
+
+        SensorJpaEntity stored = entityManager.find(SensorJpaEntity.class, sensor.getId());
+        assertThat(saved.getBuildingId()).isEqualTo(building.getId());
+        assertThat(stored.getBuilding().getId()).isEqualTo(building.getId());
+        assertThat(stored.getZone()).isEqualTo("FLOOR-3-NORTH");
+        assertThat(stored.getType()).isEqualTo(SensorType.ACCELEROMETER);
+        assertThat(stored.getStatus()).isEqualTo(SensorStatus.PENDING);
+    }
+
+    @Test
+    void findsTheSensorsOfABuildingOrderedByZone() {
+        Building building = buildingRepository.save(BuildingFixtures.pendingBuilding());
+        Building other = buildingRepository.save(BuildingFixtures.pendingBuilding());
+        sensorRepository.save(building.registerSensor("ROOF-SOUTH", SensorType.INCLINOMETER));
+        sensorRepository.save(building.registerSensor("FLOOR-3-NORTH", SensorType.ACCELEROMETER));
+        sensorRepository.save(other.registerSensor("BASEMENT", SensorType.ACCELEROMETER));
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(sensorRepository.findByBuildingId(building.getId()))
+                .extracting(Sensor::getZone)
+                .containsExactly("FLOOR-3-NORTH", "ROOF-SOUTH");
+    }
+
+    @Test
+    void updatesTheStatusOfAStoredSensor() {
+        Building building = buildingRepository.save(BuildingFixtures.pendingBuilding());
+        Sensor sensor = sensorRepository.save(building.registerSensor("FLOOR-3-NORTH", SensorType.ACCELEROMETER));
+        entityManager.flush();
+        entityManager.clear();
+
+        Sensor found = sensorRepository.findById(sensor.getId()).orElseThrow();
+        found.activate();
+        sensorRepository.save(found);
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(sensorRepository.findById(sensor.getId()))
+                .hasValueSatisfying(stored -> assertThat(stored.getStatus()).isEqualTo(SensorStatus.ACTIVE));
+        assertThat(sensorRepository.findByBuildingId(building.getId())).hasSize(1);
+    }
+}
