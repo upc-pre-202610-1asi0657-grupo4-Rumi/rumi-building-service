@@ -4,6 +4,9 @@ import com.rumi.buildingmanagement.domain.model.ResidentInvitation;
 import com.rumi.buildingmanagement.domain.repository.ResidentInvitationRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.UUID;
+
 @Repository
 public class JpaResidentInvitationRepository implements ResidentInvitationRepository {
 
@@ -16,6 +19,13 @@ public class JpaResidentInvitationRepository implements ResidentInvitationReposi
     ) {
         this.springDataRepository = springDataRepository;
         this.springDataBuildingRepository = springDataBuildingRepository;
+    }
+
+    @Override
+    public List<ResidentInvitation> findByBuildingId(UUID buildingId) {
+        return springDataRepository.findByBuilding_IdOrderByCreatedAtDescIdAsc(buildingId).stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     @Override

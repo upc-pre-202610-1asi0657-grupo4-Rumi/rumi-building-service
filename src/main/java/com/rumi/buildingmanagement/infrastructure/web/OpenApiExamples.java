@@ -234,6 +234,35 @@ final class OpenApiExamples {
               "instance": "/api/v1/invitations"
             }""";
 
+    static final String INVITATION_LIST_RESPONSE = """
+            [
+              {
+                "id": "b7e6d5c4-3a2b-4c1d-9e8f-7a6b5c4d3e2f",
+                "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+                "code": "RUMI-7K2M9QXD",
+                "status": "PENDING",
+                "createdAt": "2026-10-06T15:30:00Z"
+              }
+            ]""";
+
+    static final String INVITATION_MISSING_BUILDING_ID_ERROR = """
+            {
+              "type": "about:blank",
+              "title": "Bad Request",
+              "status": 400,
+              "detail": "Required parameter 'buildingId' is not present.",
+              "instance": "/api/v1/invitations"
+            }""";
+
+    static final String INVITATION_INVALID_BUILDING_ID_ERROR = """
+            {
+              "type": "about:blank",
+              "title": "Bad Request",
+              "status": 400,
+              "detail": "Failed to convert 'buildingId' with value: 'not-a-uuid'",
+              "instance": "/api/v1/invitations"
+            }""";
+
     private OpenApiExamples() {
     }
 }

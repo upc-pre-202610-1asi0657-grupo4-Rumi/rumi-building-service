@@ -54,4 +54,19 @@ class JpaResidentInvitationRepositoryTest {
         assertThat(invitationRepository.existsByCode("RUMI-7K2M9QXD")).isTrue();
         assertThat(invitationRepository.existsByCode("RUMI-ZZZZZZZZ")).isFalse();
     }
+
+    @Test
+    void findsTheInvitationsOfABuildingNewestFirst() {
+        Building building = buildingRepository.save(BuildingFixtures.pendingBuilding());
+        Building other = buildingRepository.save(BuildingFixtures.pendingBuilding());
+        invitationRepository.save(building.generateInvitation("RUMI-OLDER222", CREATED_AT));
+        invitationRepository.save(building.generateInvitation("RUMI-NEWER222", CREATED_AT.plusSeconds(60)));
+        invitationRepository.save(other.generateInvitation("RUMI-OTHER222", CREATED_AT));
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(invitationRepository.findByBuildingId(building.getId()))
+                .extracting(ResidentInvitation::getCode)
+                .containsExactly("RUMI-NEWER222", "RUMI-OLDER222");
+    }
 }

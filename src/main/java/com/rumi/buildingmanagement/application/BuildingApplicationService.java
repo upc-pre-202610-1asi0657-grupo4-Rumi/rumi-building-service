@@ -105,6 +105,11 @@ public class BuildingApplicationService {
         return invitationRepository.save(invitation);
     }
 
+    public List<ResidentInvitation> listInvitations(UUID buildingId) {
+        Building building = getBuilding(buildingId);
+        return invitationRepository.findByBuildingId(building.getId());
+    }
+
     private String newUniqueCode() {
         for (int attempt = 0; attempt < MAX_CODE_ATTEMPTS; attempt++) {
             String code = invitationCodeGenerator.generate();

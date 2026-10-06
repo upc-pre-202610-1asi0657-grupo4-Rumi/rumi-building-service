@@ -186,4 +186,21 @@ class BuildingApplicationServiceTest {
                 .isInstanceOf(BuildingNotFoundException.class);
         assertThat(invitationRepository.saved()).isEmpty();
     }
+
+    @Test
+    void listsOnlyTheInvitationsOfTheRequestedBuilding() {
+        Building building = service.registerBuilding(BuildingFixtures.pendingBuilding());
+        Building other = service.registerBuilding(BuildingFixtures.pendingBuilding());
+        codes.addAll(List.of("RUMI-AAAAAAAA", "RUMI-BBBBBBBB"));
+        ResidentInvitation invitation = service.inviteResident(building.getId());
+        service.inviteResident(other.getId());
+
+        assertThat(service.listInvitations(building.getId())).containsExactly(invitation);
+    }
+
+    @Test
+    void failsToListTheInvitationsOfAnUnknownBuilding() {
+        assertThatThrownBy(() -> service.listInvitations(UUID.randomUUID()))
+                .isInstanceOf(BuildingNotFoundException.class);
+    }
 }
