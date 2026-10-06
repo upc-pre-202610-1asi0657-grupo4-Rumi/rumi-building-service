@@ -13,21 +13,308 @@
     ],
     "tags": [
         {
+            "name": "Sensors",
+            "description": "IoT sensors installed in the zones of a building"
+        },
+        {
             "name": "Buildings",
             "description": "Registration and management of monitored buildings"
+        },
+        {
+            "name": "Invitations",
+            "description": "Invitation codes that let residents join a building"
         }
     ],
     "paths": {
+        "/api/v1/invitations": {
+            "get": {
+                "tags": [
+                    "Invitations"
+                ],
+                "summary": "List the invitations of a building",
+                "description": "Returns the invitations generated for the building, newest first (US06). The list is empty when the building has no invitations yet.",
+                "operationId": "listInvitations",
+                "parameters": [
+                    {
+                        "name": "buildingId",
+                        "in": "query",
+                        "description": "Identifier of the building whose invitations are listed",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "example": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invitations of the building (possibly none)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/InvitationResponse"
+                                    }
+                                },
+                                "examples": {
+                                    "One invitation": {
+                                        "description": "One invitation",
+                                        "value": [
+                                            {
+                                                "id": "b7e6d5c4-3a2b-4c1d-9e8f-7a6b5c4d3e2f",
+                                                "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+                                                "code": "RUMI-7K2M9QXD",
+                                                "status": "PENDING",
+                                                "createdAt": "2026-10-06T15:30:00Z"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "buildingId is missing or is not a valid UUID",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetail"
+                                },
+                                "examples": {
+                                    "Missing building id": {
+                                        "description": "Missing building id",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Bad Request",
+                                            "status": 400,
+                                            "detail": "Required parameter 'buildingId' is not present.",
+                                            "instance": "/api/v1/invitations"
+                                        }
+                                    },
+                                    "Invalid building id": {
+                                        "description": "Invalid building id",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Bad Request",
+                                            "status": 400,
+                                            "detail": "Failed to convert 'buildingId' with value: 'not-a-uuid'",
+                                            "instance": "/api/v1/invitations"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No building has that identifier",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetail"
+                                },
+                                "examples": {
+                                    "Unknown building": {
+                                        "description": "Unknown building",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Not Found",
+                                            "status": 404,
+                                            "detail": "Building 7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d was not found",
+                                            "instance": "/api/v1/invitations"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Invitations"
+                ],
+                "summary": "Invite a resident to a building",
+                "description": "Generates an invitation with a unique random code for the building (US06). The invitation starts as PENDING and the administrator shares the code with the resident.",
+                "operationId": "inviteResident",
+                "requestBody": {
+                    "description": "Building the resident is invited to",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InvitationRequest"
+                            },
+                            "examples": {
+                                "Invitation": {
+                                    "description": "Invitation",
+                                    "value": {
+                                        "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Invitation created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvitationResponse"
+                                },
+                                "examples": {
+                                    "Pending invitation": {
+                                        "description": "Pending invitation",
+                                        "value": {
+                                            "id": "b7e6d5c4-3a2b-4c1d-9e8f-7a6b5c4d3e2f",
+                                            "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+                                            "code": "RUMI-7K2M9QXD",
+                                            "status": "PENDING",
+                                            "createdAt": "2026-10-06T15:30:00Z"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "buildingId is missing or is not a valid UUID",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetail"
+                                },
+                                "examples": {
+                                    "Missing building id": {
+                                        "description": "Missing building id",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Bad Request",
+                                            "status": 400,
+                                            "detail": "Invalid request content.",
+                                            "instance": "/api/v1/invitations",
+                                            "errors": {
+                                                "buildingId": "must not be null"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No building has that identifier",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetail"
+                                },
+                                "examples": {
+                                    "Unknown building": {
+                                        "description": "Unknown building",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Not Found",
+                                            "status": 404,
+                                            "detail": "Building 7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d was not found",
+                                            "instance": "/api/v1/invitations"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/buildings": {
+            "get": {
+                "tags": [
+                    "Buildings"
+                ],
+                "summary": "List buildings",
+                "description": "Returns the registered buildings ordered by name (US04). When administratorUserId is sent, only the buildings of that administrator are returned. The list is empty when nothing matches.",
+                "operationId": "listBuildings",
+                "parameters": [
+                    {
+                        "name": "administratorUserId",
+                        "in": "query",
+                        "description": "Returns only the buildings registered by this administrator user",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "example": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Buildings found (possibly none)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/BuildingResponse"
+                                    }
+                                },
+                                "examples": {
+                                    "One building": {
+                                        "description": "One building",
+                                        "value": [
+                                            {
+                                                "id": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+                                                "name": "Torre Miraflores",
+                                                "address": "Av. Larco 1234, Miraflores",
+                                                "floors": 12,
+                                                "constructionYear": 2015,
+                                                "units": 48,
+                                                "status": "ACTIVE",
+                                                "administratorUserId": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "administratorUserId is not a valid UUID",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetail"
+                                },
+                                "examples": {
+                                    "Invalid administrator id": {
+                                        "description": "Invalid administrator id",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Bad Request",
+                                            "status": 400,
+                                            "detail": "Failed to convert 'administratorUserId' with value: 'not-a-uuid'",
+                                            "instance": "/api/v1/buildings"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "tags": [
                     "Buildings"
                 ],
                 "summary": "Register a building",
-                "description": "Registers a new building to be monitored (US04). The service generates the building id and returns the stored building.",
+                "description": "Registers a new building to be monitored (US04). The service generates the building id and sets the status to PENDING_SENSORS; the building becomes ACTIVE when its first sensor is activated. The administrator is sent in the body until the IAM service exists.",
                 "operationId": "registerBuilding",
                 "requestBody": {
-                    "description": "Name and address of the building to register",
+                    "description": "Data of the building to register",
                     "content": {
                         "application/json": {
                             "schema": {
@@ -37,8 +324,12 @@
                                 "Residential tower": {
                                     "description": "Residential tower",
                                     "value": {
-                                        "name": "Rumi Tower",
-                                        "address": "Av. Arequipa 1234, Lince, Lima"
+                                        "name": "Torre Miraflores",
+                                        "address": "Av. Larco 1234, Miraflores",
+                                        "floors": 12,
+                                        "constructionYear": 2015,
+                                        "units": 48,
+                                        "administratorUserId": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f"
                                     }
                                 }
                             }
@@ -58,9 +349,14 @@
                                     "Registered building": {
                                         "description": "Registered building",
                                         "value": {
-                                            "id": "3f2c8a10-5d7b-4e9a-b1c2-0a1b2c3d4e5f",
-                                            "name": "Rumi Tower",
-                                            "address": "Av. Arequipa 1234, Lince, Lima"
+                                            "id": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+                                            "name": "Torre Miraflores",
+                                            "address": "Av. Larco 1234, Miraflores",
+                                            "floors": 12,
+                                            "constructionYear": 2015,
+                                            "units": 48,
+                                            "status": "PENDING_SENSORS",
+                                            "administratorUserId": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f"
                                         }
                                     }
                                 }
@@ -68,35 +364,467 @@
                         }
                     },
                     "400": {
-                        "description": "The request body is missing or is not valid JSON",
+                        "description": "A field is missing, blank or out of range, or the body is not valid JSON",
                         "content": {
-                            "application/json": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetail"
+                                },
                                 "examples": {
+                                    "Invalid fields": {
+                                        "description": "Invalid fields",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Bad Request",
+                                            "status": 400,
+                                            "detail": "Invalid request content.",
+                                            "instance": "/api/v1/buildings",
+                                            "errors": {
+                                                "floors": "must be greater than or equal to 1",
+                                                "name": "must not be blank"
+                                            }
+                                        }
+                                    },
                                     "Malformed body": {
                                         "description": "Malformed body",
                                         "value": {
-                                            "timestamp": "2026-10-06T15:30:00.000+00:00",
+                                            "type": "about:blank",
+                                            "title": "Bad Request",
                                             "status": 400,
-                                            "error": "Bad Request",
-                                            "path": "/api/v1/buildings"
+                                            "detail": "Failed to read request",
+                                            "instance": "/api/v1/buildings"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/buildings/{buildingId}/sensors": {
+            "get": {
+                "tags": [
+                    "Sensors"
+                ],
+                "summary": "List the sensors of a building",
+                "description": "Returns the sensors registered in the building, ordered by zone (US08). The list is empty when the building has no sensors yet.",
+                "operationId": "listSensors",
+                "parameters": [
+                    {
+                        "name": "buildingId",
+                        "in": "path",
+                        "description": "Identifier of the building",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "example": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sensors of the building (possibly none)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SensorResponse"
+                                    }
+                                },
+                                "examples": {
+                                    "Two sensors": {
+                                        "description": "Two sensors",
+                                        "value": [
+                                            {
+                                                "id": "5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11",
+                                                "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+                                                "zone": "FLOOR-3-NORTH",
+                                                "type": "ACCELEROMETER",
+                                                "status": "ACTIVE"
+                                            },
+                                            {
+                                                "id": "9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b",
+                                                "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+                                                "zone": "ROOF-SOUTH",
+                                                "type": "INCLINOMETER",
+                                                "status": "PENDING"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "buildingId is not a valid UUID",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetail"
+                                },
+                                "examples": {
+                                    "Invalid building id": {
+                                        "description": "Invalid building id",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Bad Request",
+                                            "status": 400,
+                                            "detail": "Failed to convert 'buildingId' with value: 'not-a-uuid'",
+                                            "instance": "/api/v1/buildings/not-a-uuid/sensors"
                                         }
                                     }
                                 }
                             }
                         }
                     },
-                    "500": {
-                        "description": "The name or the address is missing or blank. The domain model rejects it and the error is not yet mapped to a 4xx status.",
+                    "404": {
+                        "description": "No building has that identifier",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetail"
+                                },
+                                "examples": {
+                                    "Unknown building": {
+                                        "description": "Unknown building",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Not Found",
+                                            "status": 404,
+                                            "detail": "Building 7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d was not found",
+                                            "instance": "/api/v1/buildings/7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d/sensors"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Sensors"
+                ],
+                "summary": "Register a sensor in a building",
+                "description": "Registers a sensor in one zone of the building (US08). The service generates the sensor id and the sensor starts as PENDING.",
+                "operationId": "registerSensor",
+                "parameters": [
+                    {
+                        "name": "buildingId",
+                        "in": "path",
+                        "description": "Identifier of the building that receives the sensor",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "example": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"
+                    }
+                ],
+                "requestBody": {
+                    "description": "Zone and type of the sensor to register",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SensorRequest"
+                            },
+                            "examples": {
+                                "Accelerometer": {
+                                    "description": "Accelerometer",
+                                    "value": {
+                                        "zone": "FLOOR-3-NORTH",
+                                        "type": "ACCELEROMETER"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Sensor registered",
                         "content": {
                             "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SensorResponse"
+                                },
                                 "examples": {
-                                    "Blank name": {
-                                        "description": "Blank name",
+                                    "Registered sensor": {
+                                        "description": "Registered sensor",
                                         "value": {
-                                            "timestamp": "2026-10-06T15:30:00.000+00:00",
-                                            "status": 500,
-                                            "error": "Internal Server Error",
-                                            "path": "/api/v1/buildings"
+                                            "id": "5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11",
+                                            "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+                                            "zone": "FLOOR-3-NORTH",
+                                            "type": "ACCELEROMETER",
+                                            "status": "PENDING"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The zone is blank or too long, the type is missing or unknown, or buildingId is not a valid UUID",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetail"
+                                },
+                                "examples": {
+                                    "Blank zone": {
+                                        "description": "Blank zone",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Bad Request",
+                                            "status": 400,
+                                            "detail": "Invalid request content.",
+                                            "instance": "/api/v1/buildings/7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d/sensors",
+                                            "errors": {
+                                                "zone": "must not be blank"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No building has that identifier",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetail"
+                                },
+                                "examples": {
+                                    "Unknown building": {
+                                        "description": "Unknown building",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Not Found",
+                                            "status": 404,
+                                            "detail": "Building 7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d was not found",
+                                            "instance": "/api/v1/buildings/7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d/sensors"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sensors/{sensorId}/status": {
+            "patch": {
+                "tags": [
+                    "Sensors"
+                ],
+                "summary": "Update the status of a sensor",
+                "description": "Sets the sensor to PENDING, ACTIVE or INACTIVE (US08). A sensor becomes ACTIVE with its first reading; until the readings arrive by messaging, this endpoint does it by hand. When the first sensor of a building becomes ACTIVE, the building moves from PENDING_SENSORS to ACTIVE.",
+                "operationId": "updateSensorStatus",
+                "parameters": [
+                    {
+                        "name": "sensorId",
+                        "in": "path",
+                        "description": "Identifier of the sensor",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "example": "5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11"
+                    }
+                ],
+                "requestBody": {
+                    "description": "Status to set on the sensor",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SensorStatusRequest"
+                            },
+                            "examples": {
+                                "Activate": {
+                                    "description": "Activate",
+                                    "value": {
+                                        "status": "ACTIVE"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sensor updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SensorResponse"
+                                },
+                                "examples": {
+                                    "Active sensor": {
+                                        "description": "Active sensor",
+                                        "value": {
+                                            "id": "5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11",
+                                            "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+                                            "zone": "FLOOR-3-NORTH",
+                                            "type": "ACCELEROMETER",
+                                            "status": "ACTIVE"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The status is missing or is not PENDING, ACTIVE or INACTIVE, or sensorId is not a valid UUID",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetail"
+                                },
+                                "examples": {
+                                    "Missing status": {
+                                        "description": "Missing status",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Bad Request",
+                                            "status": 400,
+                                            "detail": "Invalid request content.",
+                                            "instance": "/api/v1/sensors/5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11/status",
+                                            "errors": {
+                                                "status": "must not be null"
+                                            }
+                                        }
+                                    },
+                                    "Unknown status": {
+                                        "description": "Unknown status",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Bad Request",
+                                            "status": 400,
+                                            "detail": "Failed to read request",
+                                            "instance": "/api/v1/sensors/5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11/status"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No sensor has that identifier",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetail"
+                                },
+                                "examples": {
+                                    "Unknown sensor": {
+                                        "description": "Unknown sensor",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Not Found",
+                                            "status": 404,
+                                            "detail": "Sensor 5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11 was not found",
+                                            "instance": "/api/v1/sensors/5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11/status"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/buildings/{buildingId}": {
+            "get": {
+                "tags": [
+                    "Buildings"
+                ],
+                "summary": "Get a building",
+                "description": "Returns one building by its identifier, including its current status (US04).",
+                "operationId": "getBuilding",
+                "parameters": [
+                    {
+                        "name": "buildingId",
+                        "in": "path",
+                        "description": "Identifier of the building",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "example": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Building found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BuildingResponse"
+                                },
+                                "examples": {
+                                    "Building": {
+                                        "description": "Building",
+                                        "value": {
+                                            "id": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+                                            "name": "Torre Miraflores",
+                                            "address": "Av. Larco 1234, Miraflores",
+                                            "floors": 12,
+                                            "constructionYear": 2015,
+                                            "units": 48,
+                                            "status": "PENDING_SENSORS",
+                                            "administratorUserId": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "buildingId is not a valid UUID",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetail"
+                                },
+                                "examples": {
+                                    "Invalid building id": {
+                                        "description": "Invalid building id",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Bad Request",
+                                            "status": 400,
+                                            "detail": "Failed to convert 'buildingId' with value: 'not-a-uuid'",
+                                            "instance": "/api/v1/buildings/not-a-uuid"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No building has that identifier",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetail"
+                                },
+                                "examples": {
+                                    "Unknown building": {
+                                        "description": "Unknown building",
+                                        "value": {
+                                            "type": "about:blank",
+                                            "title": "Not Found",
+                                            "status": 404,
+                                            "detail": "Building 7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d was not found",
+                                            "instance": "/api/v1/buildings/7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"
                                         }
                                     }
                                 }
@@ -109,6 +837,88 @@
     },
     "components": {
         "schemas": {
+            "InvitationRequest": {
+                "type": "object",
+                "description": "Data required to invite a resident to a building",
+                "properties": {
+                    "buildingId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the building the resident is invited to",
+                        "example": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"
+                    }
+                },
+                "required": [
+                    "buildingId"
+                ]
+            },
+            "InvitationResponse": {
+                "type": "object",
+                "description": "An invitation for a resident to join a building",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier generated by the service",
+                        "example": "b7e6d5c4-3a2b-4c1d-9e8f-7a6b5c4d3e2f"
+                    },
+                    "buildingId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the building the resident is invited to",
+                        "example": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"
+                    },
+                    "code": {
+                        "type": "string",
+                        "description": "Unique random code the resident enters to join the building",
+                        "example": "RUMI-7K2M9QXD",
+                        "maxLength": 20
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "PENDING until the code is used; USED or EXPIRED afterwards",
+                        "enum": [
+                            "PENDING",
+                            "USED",
+                            "EXPIRED"
+                        ],
+                        "example": "PENDING"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Moment the invitation was created (UTC)",
+                        "example": "2026-10-06T15:30:00Z"
+                    }
+                }
+            },
+            "ProblemDetail": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "detail": {
+                        "type": "string"
+                    },
+                    "instance": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "properties": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    }
+                }
+            },
             "BuildingRequest": {
                 "type": "object",
                 "description": "Data required to register a building",
@@ -116,17 +926,53 @@
                     "name": {
                         "type": "string",
                         "description": "Name of the building",
-                        "example": "Rumi Tower"
+                        "example": "Torre Miraflores",
+                        "maxLength": 100,
+                        "minLength": 0
                     },
                     "address": {
                         "type": "string",
                         "description": "Street address of the building",
-                        "example": "Av. Arequipa 1234, Lince, Lima"
+                        "example": "Av. Larco 1234, Miraflores",
+                        "maxLength": 200,
+                        "minLength": 0
+                    },
+                    "floors": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "Number of floors",
+                        "example": 12,
+                        "minimum": 1
+                    },
+                    "constructionYear": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "Year the building was built",
+                        "example": 2015,
+                        "maximum": 2100,
+                        "minimum": 1800
+                    },
+                    "units": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "Number of housing units",
+                        "example": 48,
+                        "minimum": 1
+                    },
+                    "administratorUserId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the administrator user who registers the building",
+                        "example": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f"
                     }
                 },
                 "required": [
                     "address",
-                    "name"
+                    "administratorUserId",
+                    "constructionYear",
+                    "floors",
+                    "name",
+                    "units"
                 ]
             },
             "BuildingResponse": {
@@ -137,19 +983,139 @@
                         "type": "string",
                         "format": "uuid",
                         "description": "Identifier generated by the service",
-                        "example": "3f2c8a10-5d7b-4e9a-b1c2-0a1b2c3d4e5f"
+                        "example": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"
                     },
                     "name": {
                         "type": "string",
                         "description": "Name of the building",
-                        "example": "Rumi Tower"
+                        "example": "Torre Miraflores"
                     },
                     "address": {
                         "type": "string",
                         "description": "Street address of the building",
-                        "example": "Av. Arequipa 1234, Lince, Lima"
+                        "example": "Av. Larco 1234, Miraflores"
+                    },
+                    "floors": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "Number of floors",
+                        "example": 12
+                    },
+                    "constructionYear": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "Year the building was built",
+                        "example": 2015
+                    },
+                    "units": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "Number of housing units",
+                        "example": 48
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "PENDING_SENSORS until the first sensor is activated, then ACTIVE",
+                        "enum": [
+                            "PENDING_SENSORS",
+                            "ACTIVE"
+                        ],
+                        "example": "PENDING_SENSORS"
+                    },
+                    "administratorUserId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the administrator user",
+                        "example": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f"
                     }
                 }
+            },
+            "SensorRequest": {
+                "type": "object",
+                "description": "Data required to register a sensor in a building",
+                "properties": {
+                    "zone": {
+                        "type": "string",
+                        "description": "Zone of the building where the sensor is installed",
+                        "example": "FLOOR-3-NORTH",
+                        "maxLength": 50,
+                        "minLength": 0
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Kind of sensor",
+                        "enum": [
+                            "ACCELEROMETER",
+                            "INCLINOMETER"
+                        ],
+                        "example": "ACCELEROMETER"
+                    }
+                },
+                "required": [
+                    "type",
+                    "zone"
+                ]
+            },
+            "SensorResponse": {
+                "type": "object",
+                "description": "A sensor installed in a building",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier generated by the service",
+                        "example": "5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11"
+                    },
+                    "buildingId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifier of the building that owns the sensor",
+                        "example": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"
+                    },
+                    "zone": {
+                        "type": "string",
+                        "description": "Zone of the building where the sensor is installed",
+                        "example": "FLOOR-3-NORTH"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Kind of sensor",
+                        "enum": [
+                            "ACCELEROMETER",
+                            "INCLINOMETER"
+                        ],
+                        "example": "ACCELEROMETER"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "PENDING when registered, ACTIVE while it reports readings, INACTIVE when disabled",
+                        "enum": [
+                            "PENDING",
+                            "ACTIVE",
+                            "INACTIVE"
+                        ],
+                        "example": "PENDING"
+                    }
+                }
+            },
+            "SensorStatusRequest": {
+                "type": "object",
+                "description": "New status of a sensor",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "description": "Status to set",
+                        "enum": [
+                            "PENDING",
+                            "ACTIVE",
+                            "INACTIVE"
+                        ],
+                        "example": "ACTIVE"
+                    }
+                },
+                "required": [
+                    "status"
+                ]
             }
         }
     }

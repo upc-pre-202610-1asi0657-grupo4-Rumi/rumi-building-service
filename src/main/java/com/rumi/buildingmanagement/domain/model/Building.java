@@ -1,36 +1,83 @@
 package com.rumi.buildingmanagement.domain.model;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
 public final class Building {
 
     private final UUID id;
-    private final String name;
-    private final String address;
+    private final BuildingProfile profile;
+    private BuildingStatus status;
+    private final UUID administratorUserId;
 
-    public Building(UUID id, String name, String address) {
+    public Building(UUID id, BuildingProfile profile, BuildingStatus status, UUID administratorUserId) {
         this.id = Objects.requireNonNull(id, "Building id is required");
-        this.name = requireText(name, "Building name is required");
-        this.address = requireText(address, "Building address is required");
+        this.profile = Objects.requireNonNull(profile, "Building profile is required");
+        this.status = Objects.requireNonNull(status, "Building status is required");
+        this.administratorUserId = requireAdministrator(administratorUserId);
+    }
+
+    /**
+     * Creates a new building, which waits for its sensors before it is monitored.
+     */
+    public static Building register(UUID id, BuildingProfile profile, UUID administratorUserId) {
+        return new Building(id, profile, BuildingStatus.PENDING_SENSORS, administratorUserId);
+    }
+
+    /**
+     * Adds a sensor to one zone of this building.
+     */
+    public Sensor registerSensor(String zone, SensorType type) {
+        return Sensor.register(UUID.randomUUID(), id, zone, type);
+    }
+
+    /**
+     * Creates an invitation for a resident to join this building.
+     */
+    public ResidentInvitation generateInvitation(String code, Instant createdAt) {
+        return ResidentInvitation.generate(UUID.randomUUID(), id, code, createdAt);
+    }
+
+    /**
+     * Starts the monitoring of this building; it happens when its first sensor becomes active.
+     */
+    public void activate() {
+        this.status = BuildingStatus.ACTIVE;
+    }
+
+    public boolean isPendingSensors() {
+        return status == BuildingStatus.PENDING_SENSORS;
     }
 
     public UUID getId() {
         return id;
     }
 
+    public BuildingProfile getProfile() {
+        return profile;
+    }
+
     public String getName() {
-        return name;
+        return profile.name();
     }
 
     public String getAddress() {
-        return address;
+        return profile.address();
     }
 
-    private static String requireText(String value, String message) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(message);
+    public BuildingStatus getStatus() {
+        return status;
+    }
+
+    public UUID getAdministratorUserId() {
+        return administratorUserId;
+    }
+
+    private static UUID requireAdministrator(UUID administratorUserId) {
+        if (administratorUserId == null) {
+            throw new IllegalArgumentException("Building administrator user id is required");
         }
-        return value;
+        return administratorUserId;
     }
 }

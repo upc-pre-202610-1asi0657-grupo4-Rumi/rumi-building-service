@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: rumi-building-service
+  web:
+    # Error messages are always in English, whatever the locale of the server or the client.
+    locale: en
+    locale-resolver: fixed
   datasource:
     url: ${BUILDING_DB_URL:jdbc:postgresql://localhost:5432/buildingsdb}
     username: ${BUILDING_DB_USERNAME:postgres}
@@ -12,6 +16,13 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+    properties:
+      hibernate:
+        # Instants are stored in UTC as plain TIMESTAMP columns, as in the ER model.
+        jdbc:
+          time_zone: UTC
+        type:
+          preferred_instant_jdbc_type: TIMESTAMP
 
 springdoc:
   api-docs:

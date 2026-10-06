@@ -1,9 +1,11 @@
 package com.rumi.buildingmanagement.infrastructure.persistence;
 
 import com.rumi.buildingmanagement.domain.model.Building;
+import com.rumi.buildingmanagement.domain.model.BuildingProfile;
 import com.rumi.buildingmanagement.domain.repository.BuildingRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,6 +24,20 @@ public class JpaBuildingRepository implements BuildingRepository {
     }
 
     @Override
+    public List<Building> findAll() {
+        return springDataRepository.findAllByOrderByNameAsc().stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Building> findByAdministratorUserId(UUID administratorUserId) {
+        return springDataRepository.findByAdministratorUserIdOrderByNameAsc(administratorUserId).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public Building save(Building building) {
         BuildingJpaEntity savedEntity = springDataRepository.save(toEntity(building));
         return toDomain(savedEntity);
@@ -33,18 +49,31 @@ public class JpaBuildingRepository implements BuildingRepository {
     }
 
     private BuildingJpaEntity toEntity(Building building) {
+        BuildingProfile profile = building.getProfile();
         return new BuildingJpaEntity(
                 building.getId(),
-                building.getName(),
-                building.getAddress()
+                profile.name(),
+                profile.address(),
+                profile.floors(),
+                profile.constructionYear(),
+                profile.units(),
+                building.getStatus(),
+                building.getAdministratorUserId()
         );
     }
 
     private Building toDomain(BuildingJpaEntity entity) {
         return new Building(
                 entity.getId(),
-                entity.getName(),
-                entity.getAddress()
+                new BuildingProfile(
+                        entity.getName(),
+                        entity.getAddress(),
+                        entity.getFloors(),
+                        entity.getConstructionYear(),
+                        entity.getUnits()
+                ),
+                entity.getStatus(),
+                entity.getAdministratorUserId()
         );
     }
 }
