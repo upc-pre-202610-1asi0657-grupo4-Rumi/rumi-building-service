@@ -92,6 +92,42 @@ final class OpenApiExamples {
               "instance": "/api/v1/buildings"
             }""";
 
+    static final String SENSOR_REQUEST = """
+            {
+              "zone": "FLOOR-3-NORTH",
+              "type": "ACCELEROMETER"
+            }""";
+
+    static final String SENSOR_RESPONSE = """
+            {
+              "id": "5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11",
+              "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+              "zone": "FLOOR-3-NORTH",
+              "type": "ACCELEROMETER",
+              "status": "PENDING"
+            }""";
+
+    static final String SENSOR_VALIDATION_ERROR = """
+            {
+              "type": "about:blank",
+              "title": "Bad Request",
+              "status": 400,
+              "detail": "Invalid request content.",
+              "instance": "/api/v1/buildings/7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d/sensors",
+              "errors": {
+                "zone": "must not be blank"
+              }
+            }""";
+
+    static final String SENSOR_BUILDING_NOT_FOUND_ERROR = """
+            {
+              "type": "about:blank",
+              "title": "Not Found",
+              "status": 404,
+              "detail": "Building 7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d was not found",
+              "instance": "/api/v1/buildings/7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d/sensors"
+            }""";
+
     private OpenApiExamples() {
     }
 }

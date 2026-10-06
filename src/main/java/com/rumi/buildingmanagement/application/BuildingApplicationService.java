@@ -1,7 +1,10 @@
 package com.rumi.buildingmanagement.application;
 
 import com.rumi.buildingmanagement.domain.model.Building;
+import com.rumi.buildingmanagement.domain.model.Sensor;
+import com.rumi.buildingmanagement.domain.model.SensorType;
 import com.rumi.buildingmanagement.domain.repository.BuildingRepository;
+import com.rumi.buildingmanagement.domain.repository.SensorRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,9 +17,11 @@ import java.util.UUID;
 public class BuildingApplicationService {
 
     private final BuildingRepository buildingRepository;
+    private final SensorRepository sensorRepository;
 
-    public BuildingApplicationService(BuildingRepository buildingRepository) {
+    public BuildingApplicationService(BuildingRepository buildingRepository, SensorRepository sensorRepository) {
         this.buildingRepository = buildingRepository;
+        this.sensorRepository = sensorRepository;
     }
 
     public Optional<Building> findBuildingById(UUID buildingId) {
@@ -41,5 +46,11 @@ public class BuildingApplicationService {
     @Transactional
     public Building registerBuilding(Building building) {
         return buildingRepository.save(building);
+    }
+
+    @Transactional
+    public Sensor registerSensor(UUID buildingId, String zone, SensorType type) {
+        Building building = getBuilding(buildingId);
+        return sensorRepository.save(building.registerSensor(zone, type));
     }
 }

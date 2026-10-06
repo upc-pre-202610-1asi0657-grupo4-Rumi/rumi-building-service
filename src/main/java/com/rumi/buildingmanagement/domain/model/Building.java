@@ -24,6 +24,13 @@ public final class Building {
         return new Building(id, profile, BuildingStatus.PENDING_SENSORS, administratorUserId);
     }
 
+    /**
+     * Adds a sensor to one zone of this building.
+     */
+    public Sensor registerSensor(String zone, SensorType type) {
+        return Sensor.register(UUID.randomUUID(), id, zone, type);
+    }
+
     public UUID getId() {
         return id;
     }
