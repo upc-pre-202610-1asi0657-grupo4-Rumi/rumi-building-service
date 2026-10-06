@@ -10,8 +10,10 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,18 +42,11 @@ public class BuildingController {
     )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
-            description = "Name and address of the building to register",
+            description = "Data of the building to register",
             content = @Content(
                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = BuildingRequestDto.class),
-                    examples = @ExampleObject(
-                            name = "Residential tower",
-                            value = """
-                                    {
-                                      "name": "Rumi Tower",
-                                      "address": "Av. Arequipa 1234, Lince, Lima"
-                                    }"""
-                    )
+                    examples = @ExampleObject(name = "Residential tower", value = OpenApiExamples.BUILDING_REQUEST)
             )
     )
     @ApiResponse(
@@ -60,55 +55,24 @@ public class BuildingController {
             content = @Content(
                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = BuildingResponseDto.class),
-                    examples = @ExampleObject(
-                            name = "Registered building",
-                            value = """
-                                    {
-                                      "id": "3f2c8a10-5d7b-4e9a-b1c2-0a1b2c3d4e5f",
-                                      "name": "Rumi Tower",
-                                      "address": "Av. Arequipa 1234, Lince, Lima"
-                                    }"""
-                    )
+                    examples = @ExampleObject(name = "Registered building", value = OpenApiExamples.BUILDING_RESPONSE)
             )
     )
     @ApiResponse(
             responseCode = "400",
-            description = "The request body is missing or is not valid JSON",
+            description = "A field is missing, blank or out of range, or the body is not valid JSON",
             content = @Content(
-                    mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    examples = @ExampleObject(
-                            name = "Malformed body",
-                            value = """
-                                    {
-                                      "timestamp": "2026-10-06T15:30:00.000+00:00",
-                                      "status": 400,
-                                      "error": "Bad Request",
-                                      "path": "/api/v1/buildings"
-                                    }"""
-                    )
-            )
-    )
-    @ApiResponse(
-            responseCode = "500",
-            description = "The name or the address is missing or blank. "
-                    + "The domain model rejects it and the error is not yet mapped to a 4xx status.",
-            content = @Content(
-                    mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    examples = @ExampleObject(
-                            name = "Blank name",
-                            value = """
-                                    {
-                                      "timestamp": "2026-10-06T15:30:00.000+00:00",
-                                      "status": 500,
-                                      "error": "Internal Server Error",
-                                      "path": "/api/v1/buildings"
-                                    }"""
-                    )
+                    mediaType = OpenApiExamples.PROBLEM_JSON,
+                    schema = @Schema(implementation = ProblemDetail.class),
+                    examples = {
+                            @ExampleObject(name = "Blank name", value = OpenApiExamples.BUILDING_VALIDATION_ERROR),
+                            @ExampleObject(name = "Malformed body", value = OpenApiExamples.BUILDING_MALFORMED_BODY)
+                    }
             )
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public BuildingResponseDto registerBuilding(@RequestBody BuildingRequestDto request) {
+    public BuildingResponseDto registerBuilding(@Valid @RequestBody BuildingRequestDto request) {
         Building building = mapper.toDomain(UUID.randomUUID(), request);
         Building savedBuilding = buildingService.registerBuilding(building);
         return mapper.toResponse(savedBuilding);

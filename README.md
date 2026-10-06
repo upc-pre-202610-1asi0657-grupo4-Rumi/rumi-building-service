@@ -81,8 +81,3 @@ com.rumi.buildingmanagement
     ├── persistence              JPA adapter
     └── web                      REST controller, DTOs, OpenAPI configuration
 ```
-
-## Known limitations
-
-- A missing or blank `name` or `address` is rejected by the domain model and currently
-  returned as HTTP 500 instead of a 4xx status.
