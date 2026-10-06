@@ -4,6 +4,7 @@ import com.rumi.buildingmanagement.application.BuildingApplicationService;
 import com.rumi.buildingmanagement.domain.model.Sensor;
 import com.rumi.buildingmanagement.infrastructure.web.dto.SensorRequestDto;
 import com.rumi.buildingmanagement.infrastructure.web.dto.SensorResponseDto;
+import com.rumi.buildingmanagement.infrastructure.web.dto.SensorStatusRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -17,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -144,5 +146,68 @@ public class SensorController {
         return buildingService.listSensors(buildingId).stream()
                 .map(mapper::toResponse)
                 .toList();
+    }
+
+    @Operation(
+            summary = "Update the status of a sensor",
+            description = "Sets the sensor to PENDING, ACTIVE or INACTIVE (US08). "
+                    + "A sensor becomes ACTIVE with its first reading; until the readings arrive by messaging, "
+                    + "this endpoint does it by hand. When the first sensor of a building becomes ACTIVE, "
+                    + "the building moves from PENDING_SENSORS to ACTIVE."
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            description = "Status to set on the sensor",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = SensorStatusRequestDto.class),
+                    examples = @ExampleObject(name = "Activate", value = OpenApiExamples.SENSOR_STATUS_REQUEST)
+            )
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Sensor updated",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = SensorResponseDto.class),
+                    examples = @ExampleObject(name = "Active sensor", value = OpenApiExamples.SENSOR_ACTIVE_RESPONSE)
+            )
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "The status is missing or is not PENDING, ACTIVE or INACTIVE, "
+                    + "or sensorId is not a valid UUID",
+            content = @Content(
+                    mediaType = OpenApiExamples.PROBLEM_JSON,
+                    schema = @Schema(implementation = ProblemDetail.class),
+                    examples = {
+                            @ExampleObject(
+                                    name = "Missing status",
+                                    value = OpenApiExamples.SENSOR_STATUS_VALIDATION_ERROR
+                            ),
+                            @ExampleObject(
+                                    name = "Unknown status",
+                                    value = OpenApiExamples.SENSOR_STATUS_UNKNOWN_VALUE_ERROR
+                            )
+                    }
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "No sensor has that identifier",
+            content = @Content(
+                    mediaType = OpenApiExamples.PROBLEM_JSON,
+                    schema = @Schema(implementation = ProblemDetail.class),
+                    examples = @ExampleObject(name = "Unknown sensor", value = OpenApiExamples.SENSOR_NOT_FOUND_ERROR)
+            )
+    )
+    @PatchMapping("/sensors/{sensorId}/status")
+    public SensorResponseDto updateSensorStatus(
+            @Parameter(description = "Identifier of the sensor",
+                    example = "5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11")
+            @PathVariable UUID sensorId,
+            @Valid @RequestBody SensorStatusRequestDto request
+    ) {
+        return mapper.toResponse(buildingService.updateSensorStatus(sensorId, request.status()));
     }
 }

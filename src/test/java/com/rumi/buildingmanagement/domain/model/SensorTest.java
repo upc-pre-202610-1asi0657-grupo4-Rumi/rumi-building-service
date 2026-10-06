@@ -36,4 +36,22 @@ class SensorTest {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> Sensor.register(UUID.randomUUID(), BUILDING_ID, "FLOOR-3-NORTH", null));
     }
+
+    @Test
+    void activatesAndChangesItsStatus() {
+        Sensor sensor = Sensor.register(UUID.randomUUID(), BUILDING_ID, "FLOOR-3-NORTH", SensorType.ACCELEROMETER);
+
+        sensor.activate();
+        assertThat(sensor.isActive()).isTrue();
+
+        sensor.changeStatus(SensorStatus.INACTIVE);
+        assertThat(sensor.getStatus()).isEqualTo(SensorStatus.INACTIVE);
+    }
+
+    @Test
+    void rejectsAMissingStatus() {
+        Sensor sensor = Sensor.register(UUID.randomUUID(), BUILDING_ID, "FLOOR-3-NORTH", SensorType.ACCELEROMETER);
+
+        assertThatIllegalArgumentException().isThrownBy(() -> sensor.changeStatus(null));
+    }
 }

@@ -47,4 +47,15 @@ class BuildingTest {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new BuildingProfile("Torre Miraflores", "Av. Larco 1234", 12, 2015, 0));
     }
+
+    @Test
+    void becomesActiveWhenActivated() {
+        Building building = BuildingFixtures.pendingBuilding();
+        assertThat(building.isPendingSensors()).isTrue();
+
+        building.activate();
+
+        assertThat(building.getStatus()).isEqualTo(BuildingStatus.ACTIVE);
+        assertThat(building.isPendingSensors()).isFalse();
+    }
 }

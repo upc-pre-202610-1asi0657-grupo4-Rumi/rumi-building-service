@@ -5,6 +5,7 @@ import com.rumi.buildingmanagement.domain.repository.SensorRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -19,6 +20,11 @@ public class JpaSensorRepository implements SensorRepository {
     ) {
         this.springDataRepository = springDataRepository;
         this.springDataBuildingRepository = springDataBuildingRepository;
+    }
+
+    @Override
+    public Optional<Sensor> findById(UUID id) {
+        return springDataRepository.findById(id).map(this::toDomain);
     }
 
     @Override

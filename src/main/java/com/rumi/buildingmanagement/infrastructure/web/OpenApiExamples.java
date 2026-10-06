@@ -155,6 +155,50 @@ final class OpenApiExamples {
               "instance": "/api/v1/buildings/7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d/sensors"
             }""";
 
+    static final String SENSOR_STATUS_REQUEST = """
+            {
+              "status": "ACTIVE"
+            }""";
+
+    static final String SENSOR_ACTIVE_RESPONSE = """
+            {
+              "id": "5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11",
+              "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+              "zone": "FLOOR-3-NORTH",
+              "type": "ACCELEROMETER",
+              "status": "ACTIVE"
+            }""";
+
+    static final String SENSOR_STATUS_VALIDATION_ERROR = """
+            {
+              "type": "about:blank",
+              "title": "Bad Request",
+              "status": 400,
+              "detail": "Invalid request content.",
+              "instance": "/api/v1/sensors/5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11/status",
+              "errors": {
+                "status": "must not be null"
+              }
+            }""";
+
+    static final String SENSOR_STATUS_UNKNOWN_VALUE_ERROR = """
+            {
+              "type": "about:blank",
+              "title": "Bad Request",
+              "status": 400,
+              "detail": "Failed to read request",
+              "instance": "/api/v1/sensors/5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11/status"
+            }""";
+
+    static final String SENSOR_NOT_FOUND_ERROR = """
+            {
+              "type": "about:blank",
+              "title": "Not Found",
+              "status": 404,
+              "detail": "Sensor 5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11 was not found",
+              "instance": "/api/v1/sensors/5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11/status"
+            }""";
+
     private OpenApiExamples() {
     }
 }

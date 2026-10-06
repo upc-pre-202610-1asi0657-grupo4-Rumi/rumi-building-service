@@ -2,6 +2,7 @@ package com.rumi.buildingmanagement.application;
 
 import com.rumi.buildingmanagement.BuildingFixtures;
 import com.rumi.buildingmanagement.domain.model.Building;
+import com.rumi.buildingmanagement.domain.model.BuildingStatus;
 import com.rumi.buildingmanagement.domain.model.Sensor;
 import com.rumi.buildingmanagement.domain.model.SensorStatus;
 import com.rumi.buildingmanagement.domain.model.SensorType;
@@ -98,5 +99,47 @@ class BuildingApplicationServiceTest {
     void failsToListTheSensorsOfAnUnknownBuilding() {
         assertThatThrownBy(() -> service.listSensors(UUID.randomUUID()))
                 .isInstanceOf(BuildingNotFoundException.class);
+    }
+
+    @Test
+    void activatingTheFirstSensorActivatesItsBuilding() {
+        Building building = service.registerBuilding(BuildingFixtures.pendingBuilding());
+        Sensor sensor = service.registerSensor(building.getId(), "FLOOR-3-NORTH", SensorType.ACCELEROMETER);
+
+        Sensor updated = service.updateSensorStatus(sensor.getId(), SensorStatus.ACTIVE);
+
+        assertThat(updated.getStatus()).isEqualTo(SensorStatus.ACTIVE);
+        assertThat(service.getBuilding(building.getId()).getStatus()).isEqualTo(BuildingStatus.ACTIVE);
+    }
+
+    @Test
+    void aSensorThatDoesNotBecomeActiveLeavesTheBuildingPending() {
+        Building building = service.registerBuilding(BuildingFixtures.pendingBuilding());
+        Sensor sensor = service.registerSensor(building.getId(), "FLOOR-3-NORTH", SensorType.ACCELEROMETER);
+
+        Sensor updated = service.updateSensorStatus(sensor.getId(), SensorStatus.INACTIVE);
+
+        assertThat(updated.getStatus()).isEqualTo(SensorStatus.INACTIVE);
+        assertThat(service.getBuilding(building.getId()).getStatus()).isEqualTo(BuildingStatus.PENDING_SENSORS);
+    }
+
+    @Test
+    void anActiveBuildingStaysActiveWhenItsSensorIsDeactivated() {
+        Building building = service.registerBuilding(BuildingFixtures.pendingBuilding());
+        Sensor sensor = service.registerSensor(building.getId(), "FLOOR-3-NORTH", SensorType.ACCELEROMETER);
+        service.updateSensorStatus(sensor.getId(), SensorStatus.ACTIVE);
+
+        service.updateSensorStatus(sensor.getId(), SensorStatus.INACTIVE);
+
+        assertThat(service.getBuilding(building.getId()).getStatus()).isEqualTo(BuildingStatus.ACTIVE);
+    }
+
+    @Test
+    void failsToUpdateTheStatusOfAnUnknownSensor() {
+        UUID unknownId = UUID.randomUUID();
+
+        assertThatThrownBy(() -> service.updateSensorStatus(unknownId, SensorStatus.ACTIVE))
+                .isInstanceOf(SensorNotFoundException.class)
+                .hasMessage("Sensor " + unknownId + " was not found");
     }
 }

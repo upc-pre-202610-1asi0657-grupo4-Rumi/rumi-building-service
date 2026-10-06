@@ -31,6 +31,17 @@ public final class Building {
         return Sensor.register(UUID.randomUUID(), id, zone, type);
     }
 
+    /**
+     * Starts the monitoring of this building; it happens when its first sensor becomes active.
+     */
+    public void activate() {
+        this.status = BuildingStatus.ACTIVE;
+    }
+
+    public boolean isPendingSensors() {
+        return status == BuildingStatus.PENDING_SENSORS;
+    }
+
     public UUID getId() {
         return id;
     }

@@ -6,11 +6,17 @@ import com.rumi.buildingmanagement.domain.repository.SensorRepository;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 final class InMemorySensorRepository implements SensorRepository {
 
     private final Map<UUID, Sensor> sensors = new LinkedHashMap<>();
+
+    @Override
+    public Optional<Sensor> findById(UUID id) {
+        return Optional.ofNullable(sensors.get(id));
+    }
 
     @Override
     public List<Sensor> findByBuildingId(UUID buildingId) {

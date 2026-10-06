@@ -28,6 +28,18 @@ public final class Sensor {
         return new Sensor(id, buildingId, zone, type, SensorStatus.PENDING);
     }
 
+    public void activate() {
+        changeStatus(SensorStatus.ACTIVE);
+    }
+
+    public void changeStatus(SensorStatus newStatus) {
+        this.status = requireValue(newStatus, "Sensor status is required");
+    }
+
+    public boolean isActive() {
+        return status == SensorStatus.ACTIVE;
+    }
+
     public UUID getId() {
         return id;
     }

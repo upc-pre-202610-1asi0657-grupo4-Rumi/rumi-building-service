@@ -57,4 +57,22 @@ class JpaSensorRepositoryTest {
                 .extracting(Sensor::getZone)
                 .containsExactly("FLOOR-3-NORTH", "ROOF-SOUTH");
     }
+
+    @Test
+    void updatesTheStatusOfAStoredSensor() {
+        Building building = buildingRepository.save(BuildingFixtures.pendingBuilding());
+        Sensor sensor = sensorRepository.save(building.registerSensor("FLOOR-3-NORTH", SensorType.ACCELEROMETER));
+        entityManager.flush();
+        entityManager.clear();
+
+        Sensor found = sensorRepository.findById(sensor.getId()).orElseThrow();
+        found.activate();
+        sensorRepository.save(found);
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(sensorRepository.findById(sensor.getId()))
+                .hasValueSatisfying(stored -> assertThat(stored.getStatus()).isEqualTo(SensorStatus.ACTIVE));
+        assertThat(sensorRepository.findByBuildingId(building.getId())).hasSize(1);
+    }
 }
