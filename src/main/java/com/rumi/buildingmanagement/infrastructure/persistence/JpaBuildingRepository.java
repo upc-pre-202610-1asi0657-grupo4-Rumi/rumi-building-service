@@ -1,6 +1,7 @@
 package com.rumi.buildingmanagement.infrastructure.persistence;
 
 import com.rumi.buildingmanagement.domain.model.Building;
+import com.rumi.buildingmanagement.domain.model.BuildingProfile;
 import com.rumi.buildingmanagement.domain.repository.BuildingRepository;
 import org.springframework.stereotype.Repository;
 
@@ -33,18 +34,31 @@ public class JpaBuildingRepository implements BuildingRepository {
     }
 
     private BuildingJpaEntity toEntity(Building building) {
+        BuildingProfile profile = building.getProfile();
         return new BuildingJpaEntity(
                 building.getId(),
-                building.getName(),
-                building.getAddress()
+                profile.name(),
+                profile.address(),
+                profile.floors(),
+                profile.constructionYear(),
+                profile.units(),
+                building.getStatus(),
+                building.getAdministratorUserId()
         );
     }
 
     private Building toDomain(BuildingJpaEntity entity) {
         return new Building(
                 entity.getId(),
-                entity.getName(),
-                entity.getAddress()
+                new BuildingProfile(
+                        entity.getName(),
+                        entity.getAddress(),
+                        entity.getFloors(),
+                        entity.getConstructionYear(),
+                        entity.getUnits()
+                ),
+                entity.getStatus(),
+                entity.getAdministratorUserId()
         );
     }
 }

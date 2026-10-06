@@ -1,6 +1,8 @@
 package com.rumi.buildingmanagement.infrastructure.persistence;
 
+import com.rumi.buildingmanagement.BuildingFixtures;
 import com.rumi.buildingmanagement.domain.model.Building;
+import com.rumi.buildingmanagement.domain.model.BuildingStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -19,15 +21,16 @@ class JpaBuildingRepositoryTest {
 
     @Test
     void savesAndFindsABuilding() {
-        Building building = new Building(UUID.randomUUID(), "Rumi Tower", "Av. Arequipa 1234");
+        Building building = BuildingFixtures.pendingBuilding();
 
         repository.save(building);
 
         assertThat(repository.existsById(building.getId())).isTrue();
         assertThat(repository.findById(building.getId()))
                 .hasValueSatisfying(found -> {
-                    assertThat(found.getName()).isEqualTo("Rumi Tower");
-                    assertThat(found.getAddress()).isEqualTo("Av. Arequipa 1234");
+                    assertThat(found.getProfile()).isEqualTo(BuildingFixtures.profile());
+                    assertThat(found.getStatus()).isEqualTo(BuildingStatus.PENDING_SENSORS);
+                    assertThat(found.getAdministratorUserId()).isEqualTo(BuildingFixtures.ADMINISTRATOR_ID);
                 });
     }
 

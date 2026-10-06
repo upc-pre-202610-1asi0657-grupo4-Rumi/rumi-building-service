@@ -38,7 +38,9 @@ public class BuildingController {
     @Operation(
             summary = "Register a building",
             description = "Registers a new building to be monitored (US04). "
-                    + "The service generates the building id and returns the stored building."
+                    + "The service generates the building id and sets the status to PENDING_SENSORS; "
+                    + "the building becomes ACTIVE when its first sensor is activated. "
+                    + "The administrator is sent in the body until the IAM service exists."
     )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
@@ -65,7 +67,7 @@ public class BuildingController {
                     mediaType = OpenApiExamples.PROBLEM_JSON,
                     schema = @Schema(implementation = ProblemDetail.class),
                     examples = {
-                            @ExampleObject(name = "Blank name", value = OpenApiExamples.BUILDING_VALIDATION_ERROR),
+                            @ExampleObject(name = "Invalid fields", value = OpenApiExamples.BUILDING_VALIDATION_ERROR),
                             @ExampleObject(name = "Malformed body", value = OpenApiExamples.BUILDING_MALFORMED_BODY)
                     }
             )

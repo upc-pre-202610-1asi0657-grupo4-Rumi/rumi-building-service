@@ -1,5 +1,6 @@
 package com.rumi.buildingmanagement.application;
 
+import com.rumi.buildingmanagement.BuildingFixtures;
 import com.rumi.buildingmanagement.domain.model.Building;
 import com.rumi.buildingmanagement.domain.repository.BuildingRepository;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ class BuildingApplicationServiceTest {
     void registersAndFindsABuildingThroughTheDomainRepository() {
         BuildingRepository repository = new InMemoryBuildingRepository();
         BuildingApplicationService service = new BuildingApplicationService(repository);
-        Building building = new Building(UUID.randomUUID(), "Rumi Tower", "Av. Arequipa 1234");
+        Building building = BuildingFixtures.pendingBuilding();
 
         service.registerBuilding(building);
 

@@ -1,5 +1,6 @@
 package com.rumi.buildingmanagement.infrastructure.web;
 
+import com.rumi.buildingmanagement.BuildingFixtures;
 import com.rumi.buildingmanagement.application.BuildingApplicationService;
 import com.rumi.buildingmanagement.domain.model.Building;
 import org.junit.jupiter.api.Test;
@@ -35,18 +36,23 @@ class BuildingControllerTest {
 
         mockMvc.perform(post("/api/v1/buildings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Rumi Tower\",\"address\":\"Av. Arequipa 1234\"}"))
+                        .content(BuildingFixtures.BUILDING_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNotEmpty())
-                .andExpect(jsonPath("$.name").value("Rumi Tower"))
-                .andExpect(jsonPath("$.address").value("Av. Arequipa 1234"));
+                .andExpect(jsonPath("$.name").value("Torre Miraflores"))
+                .andExpect(jsonPath("$.address").value("Av. Larco 1234, Miraflores"))
+                .andExpect(jsonPath("$.floors").value(12))
+                .andExpect(jsonPath("$.constructionYear").value(2015))
+                .andExpect(jsonPath("$.units").value(48))
+                .andExpect(jsonPath("$.status").value("PENDING_SENSORS"))
+                .andExpect(jsonPath("$.administratorUserId").value("c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f"));
     }
 
     @Test
     void rejectsABlankNameWithABadRequestProblemDetail() throws Exception {
         mockMvc.perform(post("/api/v1/buildings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\" \",\"address\":\"Av. Arequipa 1234\"}"))
+                        .content(BuildingFixtures.BUILDING_JSON.replace("Torre Miraflores", " ")))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.status").value(400))
@@ -61,10 +67,12 @@ class BuildingControllerTest {
     void rejectsAMissingAddressWithABadRequestProblemDetail() throws Exception {
         mockMvc.perform(post("/api/v1/buildings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Rumi Tower\"}"))
+                        .content("{\"name\":\"Torre Miraflores\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
-                .andExpect(jsonPath("$.errors.address").value("must not be blank"));
+                .andExpect(jsonPath("$.errors.address").value("must not be blank"))
+                .andExpect(jsonPath("$.errors.floors").value("must not be null"))
+                .andExpect(jsonPath("$.errors.administratorUserId").value("must not be null"));
     }
 
     @Test
