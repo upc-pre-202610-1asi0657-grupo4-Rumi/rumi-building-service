@@ -52,6 +52,24 @@ final class OpenApiExamples {
               "instance": "/api/v1/buildings"
             }""";
 
+    static final String BUILDING_NOT_FOUND_ERROR = """
+            {
+              "type": "about:blank",
+              "title": "Not Found",
+              "status": 404,
+              "detail": "Building 7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d was not found",
+              "instance": "/api/v1/buildings/7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"
+            }""";
+
+    static final String INVALID_BUILDING_ID_ERROR = """
+            {
+              "type": "about:blank",
+              "title": "Bad Request",
+              "status": 400,
+              "detail": "Failed to convert 'buildingId' with value: 'not-a-uuid'",
+              "instance": "/api/v1/buildings/not-a-uuid"
+            }""";
+
     static final String BUILDING_VALIDATION_ERROR = """
             {
               "type": "about:blank",

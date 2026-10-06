@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -123,5 +124,51 @@ public class BuildingController {
         return buildingService.listBuildings(administratorUserId).stream()
                 .map(mapper::toResponse)
                 .toList();
+    }
+
+    @Operation(
+            summary = "Get a building",
+            description = "Returns one building by its identifier, including its current status (US04)."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Building found",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = BuildingResponseDto.class),
+                    examples = @ExampleObject(name = "Building", value = OpenApiExamples.BUILDING_RESPONSE)
+            )
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "buildingId is not a valid UUID",
+            content = @Content(
+                    mediaType = OpenApiExamples.PROBLEM_JSON,
+                    schema = @Schema(implementation = ProblemDetail.class),
+                    examples = @ExampleObject(
+                            name = "Invalid building id",
+                            value = OpenApiExamples.INVALID_BUILDING_ID_ERROR
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "No building has that identifier",
+            content = @Content(
+                    mediaType = OpenApiExamples.PROBLEM_JSON,
+                    schema = @Schema(implementation = ProblemDetail.class),
+                    examples = @ExampleObject(
+                            name = "Unknown building",
+                            value = OpenApiExamples.BUILDING_NOT_FOUND_ERROR
+                    )
+            )
+    )
+    @GetMapping("/{buildingId}")
+    public BuildingResponseDto getBuilding(
+            @Parameter(description = "Identifier of the building",
+                    example = "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d")
+            @PathVariable UUID buildingId
+    ) {
+        return mapper.toResponse(buildingService.getBuilding(buildingId));
     }
 }

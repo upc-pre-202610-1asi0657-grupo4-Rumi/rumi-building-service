@@ -2,6 +2,7 @@ package com.rumi.buildingmanagement.infrastructure.web;
 
 import com.rumi.buildingmanagement.BuildingFixtures;
 import com.rumi.buildingmanagement.application.BuildingApplicationService;
+import com.rumi.buildingmanagement.application.BuildingNotFoundException;
 import com.rumi.buildingmanagement.domain.model.Building;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -118,5 +120,38 @@ class BuildingControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.detail").value(
                         "Failed to convert 'administratorUserId' with value: 'not-a-uuid'"));
+    }
+
+    @Test
+    void returnsABuildingByItsId() throws Exception {
+        Building building = BuildingFixtures.pendingBuilding();
+        when(buildingService.getBuilding(building.getId())).thenReturn(building);
+
+        mockMvc.perform(get("/api/v1/buildings/{buildingId}", building.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(building.getId().toString()))
+                .andExpect(jsonPath("$.address").value("Av. Larco 1234, Miraflores"));
+    }
+
+    @Test
+    void returnsNotFoundForAnUnknownBuilding() throws Exception {
+        UUID buildingId = UUID.randomUUID();
+        when(buildingService.getBuilding(buildingId)).thenThrow(new BuildingNotFoundException(buildingId));
+
+        mockMvc.perform(get("/api/v1/buildings/{buildingId}", buildingId))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.title").value("Not Found"))
+                .andExpect(jsonPath("$.detail").value("Building " + buildingId + " was not found"))
+                .andExpect(jsonPath("$.instance").value("/api/v1/buildings/" + buildingId));
+    }
+
+    @Test
+    void rejectsABuildingIdThatIsNotAUuid() throws Exception {
+        mockMvc.perform(get("/api/v1/buildings/not-a-uuid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.detail").value("Failed to convert 'buildingId' with value: 'not-a-uuid'"));
     }
 }

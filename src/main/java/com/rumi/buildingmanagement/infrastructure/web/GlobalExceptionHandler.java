@@ -1,5 +1,6 @@
 package com.rumi.buildingmanagement.infrastructure.web;
 
+import com.rumi.buildingmanagement.application.ResourceNotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -35,6 +36,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ProblemDetail problem = exception.getBody();
         problem.setProperty("errors", errors);
         return handleExceptionInternal(exception, problem, headers, status, request);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ProblemDetail handleResourceNotFound(ResourceNotFoundException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

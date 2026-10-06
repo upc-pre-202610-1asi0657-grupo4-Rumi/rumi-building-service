@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class BuildingApplicationServiceTest {
 
@@ -39,5 +40,21 @@ class BuildingApplicationServiceTest {
                 Building.register(UUID.randomUUID(), BuildingFixtures.profile(), otherAdministrator));
 
         assertThat(service.listBuildings(otherAdministrator)).containsExactly(owned);
+    }
+
+    @Test
+    void getsARegisteredBuilding() {
+        Building building = service.registerBuilding(BuildingFixtures.pendingBuilding());
+
+        assertThat(service.getBuilding(building.getId())).isSameAs(building);
+    }
+
+    @Test
+    void failsToGetAnUnknownBuilding() {
+        UUID unknownId = UUID.randomUUID();
+
+        assertThatThrownBy(() -> service.getBuilding(unknownId))
+                .isInstanceOf(BuildingNotFoundException.class)
+                .hasMessage("Building " + unknownId + " was not found");
     }
 }

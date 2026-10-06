@@ -23,6 +23,11 @@ public class BuildingApplicationService {
         return buildingRepository.findById(buildingId);
     }
 
+    public Building getBuilding(UUID buildingId) {
+        return buildingRepository.findById(buildingId)
+                .orElseThrow(() -> new BuildingNotFoundException(buildingId));
+    }
+
     /**
      * Lists the registered buildings, optionally only those of one administrator.
      */
