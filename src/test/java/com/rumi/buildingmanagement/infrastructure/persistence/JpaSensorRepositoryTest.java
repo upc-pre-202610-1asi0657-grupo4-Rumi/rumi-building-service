@@ -42,4 +42,19 @@ class JpaSensorRepositoryTest {
         assertThat(stored.getType()).isEqualTo(SensorType.ACCELEROMETER);
         assertThat(stored.getStatus()).isEqualTo(SensorStatus.PENDING);
     }
+
+    @Test
+    void findsTheSensorsOfABuildingOrderedByZone() {
+        Building building = buildingRepository.save(BuildingFixtures.pendingBuilding());
+        Building other = buildingRepository.save(BuildingFixtures.pendingBuilding());
+        sensorRepository.save(building.registerSensor("ROOF-SOUTH", SensorType.INCLINOMETER));
+        sensorRepository.save(building.registerSensor("FLOOR-3-NORTH", SensorType.ACCELEROMETER));
+        sensorRepository.save(other.registerSensor("BASEMENT", SensorType.ACCELEROMETER));
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(sensorRepository.findByBuildingId(building.getId()))
+                .extracting(Sensor::getZone)
+                .containsExactly("FLOOR-3-NORTH", "ROOF-SOUTH");
+    }
 }

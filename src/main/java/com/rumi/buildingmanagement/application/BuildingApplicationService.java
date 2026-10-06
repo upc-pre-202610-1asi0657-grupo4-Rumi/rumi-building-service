@@ -53,4 +53,9 @@ public class BuildingApplicationService {
         Building building = getBuilding(buildingId);
         return sensorRepository.save(building.registerSensor(zone, type));
     }
+
+    public List<Sensor> listSensors(UUID buildingId) {
+        Building building = getBuilding(buildingId);
+        return sensorRepository.findByBuildingId(building.getId());
+    }
 }

@@ -83,4 +83,20 @@ class BuildingApplicationServiceTest {
                 .isInstanceOf(BuildingNotFoundException.class);
         assertThat(sensorRepository.saved()).isEmpty();
     }
+
+    @Test
+    void listsOnlyTheSensorsOfTheRequestedBuilding() {
+        Building building = service.registerBuilding(BuildingFixtures.pendingBuilding());
+        Building other = service.registerBuilding(BuildingFixtures.pendingBuilding());
+        Sensor sensor = service.registerSensor(building.getId(), "FLOOR-3-NORTH", SensorType.ACCELEROMETER);
+        service.registerSensor(other.getId(), "ROOF-SOUTH", SensorType.INCLINOMETER);
+
+        assertThat(service.listSensors(building.getId())).containsExactly(sensor);
+    }
+
+    @Test
+    void failsToListTheSensorsOfAnUnknownBuilding() {
+        assertThatThrownBy(() -> service.listSensors(UUID.randomUUID()))
+                .isInstanceOf(BuildingNotFoundException.class);
+    }
 }

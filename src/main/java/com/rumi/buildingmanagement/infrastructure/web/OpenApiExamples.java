@@ -107,6 +107,33 @@ final class OpenApiExamples {
               "status": "PENDING"
             }""";
 
+    static final String SENSOR_LIST_RESPONSE = """
+            [
+              {
+                "id": "5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11",
+                "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+                "zone": "FLOOR-3-NORTH",
+                "type": "ACCELEROMETER",
+                "status": "ACTIVE"
+              },
+              {
+                "id": "9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b",
+                "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+                "zone": "ROOF-SOUTH",
+                "type": "INCLINOMETER",
+                "status": "PENDING"
+              }
+            ]""";
+
+    static final String SENSOR_LIST_INVALID_BUILDING_ID_ERROR = """
+            {
+              "type": "about:blank",
+              "title": "Bad Request",
+              "status": 400,
+              "detail": "Failed to convert 'buildingId' with value: 'not-a-uuid'",
+              "instance": "/api/v1/buildings/not-a-uuid/sensors"
+            }""";
+
     static final String SENSOR_VALIDATION_ERROR = """
             {
               "type": "about:blank",

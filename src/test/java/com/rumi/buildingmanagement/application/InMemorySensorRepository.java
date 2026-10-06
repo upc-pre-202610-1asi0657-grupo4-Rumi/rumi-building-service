@@ -13,6 +13,13 @@ final class InMemorySensorRepository implements SensorRepository {
     private final Map<UUID, Sensor> sensors = new LinkedHashMap<>();
 
     @Override
+    public List<Sensor> findByBuildingId(UUID buildingId) {
+        return sensors.values().stream()
+                .filter(sensor -> sensor.getBuildingId().equals(buildingId))
+                .toList();
+    }
+
+    @Override
     public Sensor save(Sensor sensor) {
         sensors.put(sensor.getId(), sensor);
         return sensor;

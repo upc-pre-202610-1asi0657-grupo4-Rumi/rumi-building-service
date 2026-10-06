@@ -4,6 +4,9 @@ import com.rumi.buildingmanagement.domain.model.Sensor;
 import com.rumi.buildingmanagement.domain.repository.SensorRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.UUID;
+
 @Repository
 public class JpaSensorRepository implements SensorRepository {
 
@@ -16,6 +19,13 @@ public class JpaSensorRepository implements SensorRepository {
     ) {
         this.springDataRepository = springDataRepository;
         this.springDataBuildingRepository = springDataBuildingRepository;
+    }
+
+    @Override
+    public List<Sensor> findByBuildingId(UUID buildingId) {
+        return springDataRepository.findByBuilding_IdOrderByZoneAscIdAsc(buildingId).stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     @Override

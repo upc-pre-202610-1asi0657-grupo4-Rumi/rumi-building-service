@@ -12,10 +12,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -84,5 +86,35 @@ class SensorControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.detail").value("Building " + BUILDING_ID + " was not found"));
+    }
+
+    @Test
+    void listsTheSensorsOfABuilding() throws Exception {
+        Sensor sensor = Sensor.register(UUID.randomUUID(), BUILDING_ID, "FLOOR-3-NORTH", SensorType.ACCELEROMETER);
+        when(buildingService.listSensors(BUILDING_ID)).thenReturn(List.of(sensor));
+
+        mockMvc.perform(get("/api/v1/buildings/{buildingId}/sensors", BUILDING_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(sensor.getId().toString()))
+                .andExpect(jsonPath("$[0].zone").value("FLOOR-3-NORTH"));
+    }
+
+    @Test
+    void returnsNotFoundWhenListingTheSensorsOfAnUnknownBuilding() throws Exception {
+        when(buildingService.listSensors(BUILDING_ID)).thenThrow(new BuildingNotFoundException(BUILDING_ID));
+
+        mockMvc.perform(get("/api/v1/buildings/{buildingId}/sensors", BUILDING_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    void rejectsABuildingIdThatIsNotAUuidWhenListingSensors() throws Exception {
+        mockMvc.perform(get("/api/v1/buildings/not-a-uuid/sensors"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.instance").value("/api/v1/buildings/not-a-uuid/sensors"));
     }
 }
