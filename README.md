@@ -12,8 +12,8 @@ Building Management service of **Rumi**, the structural monitoring platform by K
 
 ## Purpose
 
-Owns the buildings registered in Rumi. Sensors and resident invitations belong to this
-context as well and are planned for later sprints.
+Owns the buildings registered in Rumi, the IoT sensors installed in their zones and the
+invitation codes that let residents join a building.
 
 ## Origin
 
@@ -25,11 +25,40 @@ The state of the monolith before the decomposition is the tag
 
 ## Endpoints
 
-| Verb | Path | Description | Request | Response | User story | Status |
-|---|---|---|---|---|---|---|
-| POST | `/api/v1/buildings` | Register a building | `BuildingRequest` | `201` `BuildingResponse` | US04 | implemented |
+| Verb | Path | Description | User story | Status |
+|---|---|---|---|---|
+| POST | `/api/v1/buildings` | Register a building | US04 | implemented |
+| GET | `/api/v1/buildings` | List buildings (optional `administratorUserId` filter) | US04 | implemented |
+| GET | `/api/v1/buildings/{buildingId}` | Get a building | US04 | implemented |
+| POST | `/api/v1/buildings/{buildingId}/sensors` | Register a sensor in a building | US08 | implemented |
+| GET | `/api/v1/buildings/{buildingId}/sensors` | List the sensors of a building | US08 | implemented |
+| PATCH | `/api/v1/sensors/{sensorId}/status` | Update the status of a sensor | US08 | implemented |
+| POST | `/api/v1/invitations` | Invite a resident to a building | US06 | implemented |
+| GET | `/api/v1/invitations?buildingId=` | List the invitations of a building | US06 | implemented |
 
-Implemented functional endpoints: 1.
+Implemented functional endpoints: 8 of the 8 planned for this service.
+
+Rules:
+
+- A building is created as `PENDING_SENSORS`. It becomes `ACTIVE` when its first sensor becomes `ACTIVE`.
+- A sensor is created as `PENDING`. `PATCH /api/v1/sensors/{sensorId}/status` accepts `PENDING`, `ACTIVE`
+  or `INACTIVE`; it activates sensors by hand until readings arrive by messaging.
+- An invitation is created as `PENDING` with a unique random code such as `RUMI-7K2M9QXD`.
+- `administratorUserId` is sent in the body of `POST /api/v1/buildings` until the IAM service exists.
+
+Errors are RFC 7807 problem details (`application/problem+json`): `400` for invalid input
+(with an `errors` object, one message per invalid field) and `404` for an unknown building or sensor.
+
+```json
+{
+  "type": "about:blank",
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "Invalid request content.",
+  "instance": "/api/v1/buildings",
+  "errors": { "name": "must not be blank" }
+}
+```
 
 ## API documentation
 
@@ -37,23 +66,45 @@ Implemented functional endpoints: 1.
 - OpenAPI spec: <http://localhost:8081/v3/api-docs>
 - Exported spec: [`docs/openapi.json`](docs/openapi.json)
 
+Start the service (the `dev` profile is enough) and open Swagger UI in the browser. Every operation
+has a description and an example for its request, its responses and its errors.
+
 ## Run
 
-Requirements: JDK 21, Maven, PostgreSQL.
+The repository includes the Maven wrapper, so only JDK 21 is required. Use `mvnw.cmd` on Windows.
 
-```sql
-CREATE DATABASE buildingsdb;
-
--- inside buildingsdb (hibernate.ddl-auto is "validate", the table must exist)
-CREATE TABLE buildings (
-    id      uuid PRIMARY KEY,
-    name    varchar(255) NOT NULL,
-    address varchar(255) NOT NULL
-);
-```
+### Development profile (no external infrastructure)
 
 ```sh
-mvn spring-boot:run
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+or, with the packaged jar:
+
+```sh
+./mvnw package
+java -jar target/rumi-building-service-0.1.0.jar --spring.profiles.active=dev
+```
+
+The `dev` profile uses an in-memory H2 database that is created on startup and lost on shutdown.
+It loads sample data with fixed identifiers, shared with the sample data of the other Rumi services:
+
+| Resource | Id | Data |
+|---|---|---|
+| Building | `7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d` | Torre Miraflores, Av. Larco 1234, Miraflores, `ACTIVE` |
+| Sensor | `5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11` | zone `FLOOR-3-NORTH`, `ACCELEROMETER`, `ACTIVE` |
+
+```sh
+curl http://localhost:8081/api/v1/buildings/7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d
+```
+
+### Default profile (PostgreSQL)
+
+Requirements: JDK 21 and PostgreSQL. Create the database and its tables with
+[`docs/schema.sql`](docs/schema.sql) (Hibernate runs with `ddl-auto=validate`, the tables must exist).
+
+```sh
+./mvnw spring-boot:run
 ```
 
 | Variable | Default |
@@ -66,18 +117,23 @@ mvn spring-boot:run
 ## Test
 
 ```sh
-mvn test
+./mvnw test
 ```
 
-The tests need neither a database nor a message broker.
+The tests need neither PostgreSQL nor a message broker: persistence tests run on in-memory H2.
 
 ## Structure
 
 ```
 com.rumi.buildingmanagement
 ├── application                  use cases
-├── domain                       model and repository port
+├── domain
+│   ├── model                    Building, BuildingProfile, Sensor, ResidentInvitation and their enums
+│   ├── repository               repository ports
+│   └── service                  InvitationCodeGenerator port
 └── infrastructure
-    ├── persistence              JPA adapter
-    └── web                      REST controller, DTOs, OpenAPI configuration
+    ├── invitation               random invitation code generator
+    ├── persistence              JPA adapters
+    ├── seed                     sample data of the dev profile
+    └── web                      REST controllers, DTOs, error handling, OpenAPI configuration
 ```
