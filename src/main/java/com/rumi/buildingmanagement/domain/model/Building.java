@@ -1,5 +1,6 @@
 package com.rumi.buildingmanagement.domain.model;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -29,6 +30,13 @@ public final class Building {
      */
     public Sensor registerSensor(String zone, SensorType type) {
         return Sensor.register(UUID.randomUUID(), id, zone, type);
+    }
+
+    /**
+     * Creates an invitation for a resident to join this building.
+     */
+    public ResidentInvitation generateInvitation(String code, Instant createdAt) {
+        return ResidentInvitation.generate(UUID.randomUUID(), id, code, createdAt);
     }
 
     /**

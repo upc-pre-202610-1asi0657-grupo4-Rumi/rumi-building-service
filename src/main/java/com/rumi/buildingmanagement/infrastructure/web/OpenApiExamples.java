@@ -199,6 +199,41 @@ final class OpenApiExamples {
               "instance": "/api/v1/sensors/5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11/status"
             }""";
 
+    static final String INVITATION_REQUEST = """
+            {
+              "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"
+            }""";
+
+    static final String INVITATION_RESPONSE = """
+            {
+              "id": "b7e6d5c4-3a2b-4c1d-9e8f-7a6b5c4d3e2f",
+              "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+              "code": "RUMI-7K2M9QXD",
+              "status": "PENDING",
+              "createdAt": "2026-10-06T15:30:00Z"
+            }""";
+
+    static final String INVITATION_VALIDATION_ERROR = """
+            {
+              "type": "about:blank",
+              "title": "Bad Request",
+              "status": 400,
+              "detail": "Invalid request content.",
+              "instance": "/api/v1/invitations",
+              "errors": {
+                "buildingId": "must not be null"
+              }
+            }""";
+
+    static final String INVITATION_BUILDING_NOT_FOUND_ERROR = """
+            {
+              "type": "about:blank",
+              "title": "Not Found",
+              "status": 404,
+              "detail": "Building 7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d was not found",
+              "instance": "/api/v1/invitations"
+            }""";
+
     private OpenApiExamples() {
     }
 }
