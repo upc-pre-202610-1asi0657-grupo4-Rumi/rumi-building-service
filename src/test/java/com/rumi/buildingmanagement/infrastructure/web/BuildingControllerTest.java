@@ -11,9 +11,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -83,5 +86,37 @@ class BuildingControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.detail").value("Failed to read request"));
+    }
+
+    @Test
+    void listsTheRegisteredBuildings() throws Exception {
+        Building building = BuildingFixtures.pendingBuilding();
+        when(buildingService.listBuildings(null)).thenReturn(List.of(building));
+
+        mockMvc.perform(get("/api/v1/buildings"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(building.getId().toString()))
+                .andExpect(jsonPath("$[0].name").value("Torre Miraflores"))
+                .andExpect(jsonPath("$[0].status").value("PENDING_SENSORS"));
+    }
+
+    @Test
+    void filtersTheBuildingsByAdministrator() throws Exception {
+        when(buildingService.listBuildings(BuildingFixtures.ADMINISTRATOR_ID)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/buildings")
+                        .param("administratorUserId", BuildingFixtures.ADMINISTRATOR_ID.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void rejectsAnAdministratorIdThatIsNotAUuid() throws Exception {
+        mockMvc.perform(get("/api/v1/buildings").param("administratorUserId", "not-a-uuid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.detail").value(
+                        "Failed to convert 'administratorUserId' with value: 'not-a-uuid'"));
     }
 }

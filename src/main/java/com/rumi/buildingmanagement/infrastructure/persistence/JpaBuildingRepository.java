@@ -5,6 +5,7 @@ import com.rumi.buildingmanagement.domain.model.BuildingProfile;
 import com.rumi.buildingmanagement.domain.repository.BuildingRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,6 +21,20 @@ public class JpaBuildingRepository implements BuildingRepository {
     @Override
     public Optional<Building> findById(UUID id) {
         return springDataRepository.findById(id).map(this::toDomain);
+    }
+
+    @Override
+    public List<Building> findAll() {
+        return springDataRepository.findAllByOrderByNameAsc().stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Building> findByAdministratorUserId(UUID administratorUserId) {
+        return springDataRepository.findByAdministratorUserIdOrderByNameAsc(administratorUserId).stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     @Override

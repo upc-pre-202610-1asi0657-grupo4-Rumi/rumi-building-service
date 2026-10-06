@@ -5,6 +5,7 @@ import com.rumi.buildingmanagement.domain.repository.BuildingRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,6 +21,16 @@ public class BuildingApplicationService {
 
     public Optional<Building> findBuildingById(UUID buildingId) {
         return buildingRepository.findById(buildingId);
+    }
+
+    /**
+     * Lists the registered buildings, optionally only those of one administrator.
+     */
+    public List<Building> listBuildings(UUID administratorUserId) {
+        if (administratorUserId == null) {
+            return buildingRepository.findAll();
+        }
+        return buildingRepository.findByAdministratorUserId(administratorUserId);
     }
 
     @Transactional

@@ -38,4 +38,17 @@ class JpaBuildingRepositoryTest {
     void findsNothingForAnUnknownId() {
         assertThat(repository.findById(UUID.randomUUID())).isEmpty();
     }
+
+    @Test
+    void listsBuildingsAndFiltersThemByAdministrator() {
+        UUID otherAdministrator = UUID.randomUUID();
+        Building first = repository.save(BuildingFixtures.pendingBuilding());
+        Building second = repository.save(Building.register(
+                UUID.randomUUID(), BuildingFixtures.profile(), otherAdministrator));
+
+        assertThat(repository.findAll()).extracting(Building::getId)
+                .containsExactlyInAnyOrder(first.getId(), second.getId());
+        assertThat(repository.findByAdministratorUserId(otherAdministrator)).extracting(Building::getId)
+                .containsExactly(second.getId());
+    }
 }

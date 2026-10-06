@@ -5,19 +5,17 @@ import com.rumi.buildingmanagement.domain.model.Building;
 import com.rumi.buildingmanagement.domain.repository.BuildingRepository;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class BuildingApplicationServiceTest {
 
+    private final BuildingRepository repository = new InMemoryBuildingRepository();
+    private final BuildingApplicationService service = new BuildingApplicationService(repository);
+
     @Test
     void registersAndFindsABuildingThroughTheDomainRepository() {
-        BuildingRepository repository = new InMemoryBuildingRepository();
-        BuildingApplicationService service = new BuildingApplicationService(repository);
         Building building = BuildingFixtures.pendingBuilding();
 
         service.registerBuilding(building);
@@ -25,24 +23,21 @@ class BuildingApplicationServiceTest {
         assertThat(service.findBuildingById(building.getId())).containsSame(building);
     }
 
-    private static final class InMemoryBuildingRepository implements BuildingRepository {
+    @Test
+    void listsEveryRegisteredBuilding() {
+        Building first = service.registerBuilding(BuildingFixtures.pendingBuilding());
+        Building second = service.registerBuilding(BuildingFixtures.pendingBuilding());
 
-        private final Map<UUID, Building> buildings = new HashMap<>();
+        assertThat(service.listBuildings(null)).containsExactly(first, second);
+    }
 
-        @Override
-        public Optional<Building> findById(UUID id) {
-            return Optional.ofNullable(buildings.get(id));
-        }
+    @Test
+    void listsOnlyTheBuildingsOfAnAdministrator() {
+        UUID otherAdministrator = UUID.randomUUID();
+        service.registerBuilding(BuildingFixtures.pendingBuilding());
+        Building owned = service.registerBuilding(
+                Building.register(UUID.randomUUID(), BuildingFixtures.profile(), otherAdministrator));
 
-        @Override
-        public Building save(Building building) {
-            buildings.put(building.getId(), building);
-            return building;
-        }
-
-        @Override
-        public boolean existsById(UUID id) {
-            return buildings.containsKey(id);
-        }
+        assertThat(service.listBuildings(otherAdministrator)).containsExactly(owned);
     }
 }
